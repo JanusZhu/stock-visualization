@@ -117,14 +117,47 @@ export default class StockChart {
       const period2 = Math.floor(endDate.getTime() / 1000);
       const interval = "1d";
 
-      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=${interval}`;
+      // 原始Yahoo Finance API URL
+      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=${interval}`;
 
-      console.log(`从Yahoo Finance获取数据: ${url}`);
+      // 使用CORS代理
+      // 尝试多个CORS代理，以防某个不可用
+      const corsProxies = [
+        "https://corsproxy.io/?",
+        "https://api.allorigins.win/raw?url=",
+        "https://cors-anywhere.herokuapp.com/",
+      ];
 
-      const response = await fetch(url);
+      // 尝试不同的代理
+      let response = null;
+      let error = null;
 
-      if (!response.ok) {
-        throw new Error(`Yahoo Finance API返回错误: ${response.statusText}`);
+      for (const proxy of corsProxies) {
+        try {
+          const proxyUrl = proxy + encodeURIComponent(yahooUrl);
+          console.log(`尝试通过代理获取数据: ${proxy}`);
+
+          response = await fetch(proxyUrl, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          });
+
+          if (response.ok) {
+            break; // 如果成功就跳出循环
+          }
+        } catch (e) {
+          error = e;
+          console.warn(`代理 ${proxy} 获取数据失败:`, e);
+          // 继续尝试下一个代理
+        }
+      }
+
+      // 如果所有代理都失败了
+      if (!response || !response.ok) {
+        throw error || new Error(`无法从Yahoo Finance获取数据: ${symbol}`);
       }
 
       const data = await response.json();

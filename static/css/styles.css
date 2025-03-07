@@ -281,6 +281,18 @@ body {
     font-size: 14px;
 }
 
+.header .note {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
 /* 添加页脚样式 */
 footer {
     text-align: center;
