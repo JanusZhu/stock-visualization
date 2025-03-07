@@ -257,4 +257,75 @@ body {
     .add-company button {
         align-self: flex-end;
     }
+}
+
+/* 添加页眉样式 */
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+}
+
+.header p {
+    margin: 10px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* 添加页脚样式 */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    color: #666;
+    font-size: 12px;
+}
+
+footer a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* 为错误消息添加样式 */
+.error-message {
+    text-align: center;
+    padding: 20px;
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin: 20px;
+}
+
+/* GitHub链接按钮 */
+.github-link {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-top: 10px;
+    background-color: #24292e;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.github-link:hover {
+    background-color: #3a3a3a;
+}
+
+.github-link i {
+    margin-right: 5px;
 } 
