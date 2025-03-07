@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票价格走势</title>
+    <!-- 外部库 -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.6/dist/index.js"></script>
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="period-buttons">
+                <div class="section-title">时间周期</div>
+                <button class="button active" data-period="1w">一周</button>
+                <button class="button" data-period="1m">一个月</button>
+                <button class="button" data-period="6m">六个月</button>
+                <button class="button" data-period="1y">一年</button>
+                <button class="button" data-period="3y">三年</button>
+            </div>
+            <div class="industry-tags">
+                <div class="section-title">行业分类</div>
+                <div id="industryTags"></div>
+            </div>
+            <div class="add-company">
+                <input type="text" id="stockSymbol" placeholder="输入股票代码或公司名称（如：0700.HK 或 腾讯）">
+                <button class="button">添加公司</button>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <div class="help-text">
+                注：支持输入股票代码（如"0700.HK"）或公司名称（如"腾讯"、"阿里巴巴"）进行搜索
+            </div>
+            <div class="popular-stocks">
+                <h3>热门港股推荐：</h3>
+                <div id="popularStocks">
+                    <span class="stock-tag" data-code="0700.HK" data-name="腾讯控股">腾讯控股 (0700.HK)</span>
+                    <span class="stock-tag" data-code="9988.HK" data-name="阿里巴巴">阿里巴巴 (9988.HK)</span>
+                    <span class="stock-tag" data-code="9618.HK" data-name="京东集团">京东集团 (9618.HK)</span>
+                    <span class="stock-tag" data-code="3690.HK" data-name="美团">美团 (3690.HK)</span>
+                    <span class="stock-tag" data-code="1810.HK" data-name="小米集团">小米集团 (1810.HK)</span>
+                    <span class="stock-tag" data-code="2097.HK" data-name="蜜雪冰城">蜜雪冰城 (2097.HK)</span>
+                    <span class="stock-tag" data-code="9999.HK" data-name="网易">网易 (9999.HK)</span>
+                    <span class="stock-tag" data-code="2269.HK" data-name="药明生物">药明生物 (2269.HK)</span>
+                </div>
+            </div>
+        </div>
+        <div class="charts" id="charts"></div>
+    </div>
+    <div class="loading">
+        <div class="loading-content">
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <!-- 应用脚本（使用ES模块） -->
+    <script type="module" src="/static/js/main.js"></script>
+</body>
+</html> 

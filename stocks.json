@@ -1,0 +1,18 @@
+{
+  "xiaomi": {
+    "code": "1810.HK",
+    "name": "小米集团"
+  },
+  "meituan": {
+    "code": "3690.HK",
+    "name": "美团"
+  },
+  "mixue": {
+    "code": "2097.HK",
+    "name": "蜜雪冰城"
+  },
+  "2269_hk": {
+    "code": "2269.HK",
+    "name": "WUXI BIO"
+  }
+}
