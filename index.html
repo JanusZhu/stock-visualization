@@ -9,17 +9,6 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.6/dist/index.js"></script>
-  <!-- Yahoo Finance API包装器 -->
-  <script src="https://cdn.jsdelivr.net/npm/yahoo-finance2@2.4.4/dist/yahoo-finance.min.js"></script>
-  <script>
-    // 确保Yahoo Finance API全局对象正确初始化
-    document.addEventListener('DOMContentLoaded', function () {
-      if (typeof yahooFinance === 'undefined' && window.yahooFinance2) {
-        window.yahooFinance = window.yahooFinance2;
-        console.log('Yahoo Finance API全局对象已初始化');
-      }
-    });
-  </script>
   <!-- 自定义样式 -->
   <link rel="stylesheet" href="static/css/styles.css">
 </head>
@@ -28,7 +17,7 @@
   <div class="container">
     <div class="header">
       <h1>股票价格走势可视化</h1>
-      <p>GitHub Pages静态版本 - 使用Yahoo Finance API获取实时数据</p>
+      <p>GitHub Pages静态版本 - 直接调用Yahoo Finance数据API</p>
     </div>
 
     <div class="controls">

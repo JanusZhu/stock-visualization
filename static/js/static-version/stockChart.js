@@ -7,12 +7,6 @@ export default class StockChart {
     this.currentPeriod = "1w";
     this.chartsContainer = document.getElementById("charts");
     this.lastAddedCompany = null;
-    // 确保yahooFinance对象存在
-    if (window.yahooFinance) {
-      this.yahooFinance = window.yahooFinance;
-    } else {
-      console.error("Yahoo Finance API未正确加载");
-    }
   }
 
   /**
@@ -22,9 +16,6 @@ export default class StockChart {
     this.companies = companies;
     this.currentPeriod = period;
     this.removeCallback = removeCallback;
-
-    // 确保Yahoo Finance API可用
-    this.initYahooFinance();
 
     // 尝试加载图表数据
     try {
@@ -39,31 +30,15 @@ export default class StockChart {
   }
 
   /**
-   * 初始化Yahoo Finance API
+   * 初始化窗口大小调整处理
    */
-  initYahooFinance() {
-    // 尝试不同的可能的全局变量名
-    if (!this.yahooFinance) {
-      if (window.yahooFinance) {
-        this.yahooFinance = window.yahooFinance;
-      } else if (window.yahooFinance2) {
-        this.yahooFinance = window.yahooFinance2;
-      } else if (window.YahooFinance2) {
-        this.yahooFinance = window.YahooFinance2;
+  handleResize() {
+    const charts = document.querySelectorAll(".chart");
+    charts.forEach((chart) => {
+      if (chart.id) {
+        window.Plotly.Plots.resize(chart.id);
       }
-    }
-
-    // 检查是否需要从default属性获取
-    if (this.yahooFinance && this.yahooFinance.default && typeof this.yahooFinance.historical !== 'function') {
-      this.yahooFinance = this.yahooFinance.default;
-    }
-
-    if (!this.yahooFinance || typeof this.yahooFinance.historical !== 'function') {
-      console.error("无法初始化Yahoo Finance API，将尝试动态加载");
-      // 在这里可以添加动态加载逻辑
-    } else {
-      console.log("Yahoo Finance API初始化成功");
-    }
+    });
   }
 
   /**
@@ -100,22 +75,10 @@ export default class StockChart {
   }
 
   /**
-   * 处理窗口大小调整
-   */
-  handleResize() {
-    const charts = document.querySelectorAll(".chart");
-    charts.forEach((chart) => {
-      if (chart.id && window.Plotly) {
-        window.Plotly.relayout(chart.id, {
-          width: chart.offsetWidth,
-          height: chart.offsetHeight,
-        });
-      }
-    });
-  }
-
-  /**
    * 获取股票数据
+   * @param {string} symbol - 股票代码
+   * @param {string} period - 时间周期
+   * @returns {Promise<Array>} - 股票数据
    */
   async getStockData(symbol, period) {
     try {
@@ -148,77 +111,71 @@ export default class StockChart {
           startDate.setDate(endDate.getDate() - 7);
       }
 
-      // 确保API初始化
-      this.initYahooFinance();
+      // 使用直接的Fetch API替代Yahoo Finance库
+      // 构建Yahoo Finance查询URL
+      const period1 = Math.floor(startDate.getTime() / 1000);
+      const period2 = Math.floor(endDate.getTime() / 1000);
+      const interval = "1d";
 
-      if (!this.yahooFinance || typeof this.yahooFinance.historical !== 'function') {
-        throw new Error('Yahoo Finance API不可用，请检查网络连接或尝试刷新页面');
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${period1}&period2=${period2}&interval=${interval}`;
+
+      console.log(`从Yahoo Finance获取数据: ${url}`);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Yahoo Finance API返回错误: ${response.statusText}`);
       }
 
-      // 查询参数
-      const queryOptions = {
-        period1: startDate.toISOString().split("T")[0],
-        period2: endDate.toISOString().split("T")[0],
-        interval: "1d"
-      };
+      const data = await response.json();
 
-      console.log(`尝试获取${symbol}的历史数据`, queryOptions);
-
-      // 尝试获取数据
-      let result;
-      try {
-        // 尝试方法1
-        result = await this.yahooFinance.historical(symbol, queryOptions);
-      } catch (error1) {
-        console.warn(`方法1获取${symbol}数据失败`, error1);
-
-        // 尝试方法2 - 有些版本的API使用query方法
-        try {
-          if (typeof this.yahooFinance.query === "function") {
-            const queryResult = await this.yahooFinance.query({
-              symbols: [symbol],
-              quote: ["regularMarketPrice"],
-              history: queryOptions,
-            });
-
-            if (
-              queryResult &&
-              queryResult[symbol] &&
-              queryResult[symbol].history
-            ) {
-              result = queryResult[symbol].history;
-            } else {
-              throw new Error("未找到历史数据");
-            }
-          } else {
-            throw new Error("查询方法不可用");
-          }
-        } catch (error2) {
-          console.warn(`方法2获取${symbol}数据失败`, error2);
-
-          // 尝试方法3 - 尝试使用其他格式的API
-          try {
-            // 检查版本2与版本3的API差异
-            if (window.yahooFinance2) {
-              result = await window.yahooFinance2.historical(
-                symbol,
-                queryOptions
-              );
-            } else {
-              throw new Error("API对象不可用");
-            }
-          } catch (error3) {
-            console.error(`所有方法获取${symbol}数据均失败`, error3);
-            throw new Error(`无法获取 ${symbol} 的数据: ${error3.message}`);
-          }
-        }
+      // 解析API响应
+      if (
+        !data ||
+        !data.chart ||
+        !data.chart.result ||
+        data.chart.result.length === 0
+      ) {
+        throw new Error(`没有找到 ${symbol} 的数据`);
       }
 
-      if (!result || !Array.isArray(result) || result.length === 0) {
-        throw new Error(`没有找到 ${symbol} 的有效数据`);
+      const result = data.chart.result[0];
+      const { timestamp, indicators } = result;
+
+      if (
+        !timestamp ||
+        !indicators ||
+        !indicators.quote ||
+        indicators.quote.length === 0
+      ) {
+        throw new Error(`${symbol} 数据格式不正确`);
       }
 
-      return result;
+      const quote = indicators.quote[0];
+      const adjclose = indicators.adjclose
+        ? indicators.adjclose[0].adjclose
+        : null;
+
+      // 转换为与之前格式兼容的数据结构
+      const stockData = timestamp
+        .map((time, i) => {
+          return {
+            date: new Date(time * 1000),
+            open: quote.open[i],
+            high: quote.high[i],
+            low: quote.low[i],
+            close: quote.close[i],
+            volume: quote.volume[i],
+            adjclose: adjclose ? adjclose[i] : quote.close[i],
+          };
+        })
+        .filter((item) => item.open && item.close); // 过滤掉无效数据
+
+      if (stockData.length === 0) {
+        throw new Error(`${symbol} 没有有效的交易数据`);
+      }
+
+      return stockData;
     } catch (error) {
       console.error(`获取股票数据失败 [${symbol}]:`, error);
       throw error;
@@ -229,110 +186,154 @@ export default class StockChart {
    * 创建图表配置
    */
   createPlotConfig(data, companyName) {
-    // 确保日期格式正确
-    const dates = data.map((item) => new Date(item.date));
+    // 准备数据
+    const dates = data.map((item) => item.date);
+    const closePrices = data.map((item) => item.close);
 
-    // 创建主图表
-    const traceCandlestick = {
+    // 计算最低和最高价格以及设置y轴范围
+    const maxPrice = Math.max(...data.map((item) => item.high));
+    const minPrice = Math.min(...data.map((item) => item.low));
+    const yRange = maxPrice - minPrice;
+
+    // 计算成交量数据并调整显示比例
+    const volumes = data.map((item) => item.volume);
+    const maxVolume = Math.max(...volumes);
+
+    // 根据最大成交量调整比例
+    const volumeScale = maxVolume > 0 ? (yRange / maxVolume) * 0.2 : 0;
+    const scaledVolumes = volumes.map((vol) => minPrice + vol * volumeScale);
+
+    // 红绿柱设置
+    const colors = data.map((item, i) => {
+      if (i === 0) return "grey"; // 第一个点
+      return item.close >= data[i - 1].close ? "red" : "green";
+    });
+
+    // 计算移动平均线数据 (5日和10日)
+    const ma5 = this.calculateMA(5, closePrices);
+    const ma10 = this.calculateMA(10, closePrices);
+
+    // 计算价格变动百分比
+    const firstPrice = closePrices[0];
+    const lastPrice = closePrices[closePrices.length - 1];
+    const priceChange = lastPrice - firstPrice;
+    const priceChangePercent = (priceChange / firstPrice) * 100;
+
+    // 构建图表数据
+    const trace1 = {
       x: dates,
-      close: data.map((item) => item.close),
+      close: closePrices,
       high: data.map((item) => item.high),
       low: data.map((item) => item.low),
       open: data.map((item) => item.open),
+
+      // 图表类型和样式
+      increasing: { line: { color: "red" } },
+      decreasing: { line: { color: "green" } },
       type: "candlestick",
-      name: "股价",
-      increasing: { line: { color: "#e53935" } },
-      decreasing: { line: { color: "#43a047" } },
+      name: "价格",
+      yaxis: "y1",
     };
 
-    // 添加成交量图表
-    const traceVolume = {
+    const trace2 = {
       x: dates,
-      y: data.map((item) => item.volume),
+      y: scaledVolumes,
+      marker: {
+        color: colors,
+        opacity: 0.7,
+      },
       type: "bar",
       name: "成交量",
-      yaxis: "y2",
-      marker: {
-        color: data.map((item, i) => {
-          return i > 0 && item.close > data[i - 1].close
-            ? "#e53935"
-            : "#43a047";
-        }),
-        opacity: 0.8,
-      },
+      yaxis: "y1",
+      showlegend: false,
     };
 
-    // 根据交易量范围自动调整Y轴刻度
-    const maxVolume = Math.max(...data.map((item) => item.volume));
-    const volumeTickFormat =
-      maxVolume > 1000000000 ? ".2s" : maxVolume > 1000000 ? ".1s" : "d";
+    const trace3 = {
+      x: dates,
+      y: ma5,
+      type: "scatter",
+      mode: "lines",
+      line: { color: "blue" },
+      name: "5日均线",
+      yaxis: "y1",
+    };
 
+    const trace4 = {
+      x: dates,
+      y: ma10,
+      type: "scatter",
+      mode: "lines",
+      line: { color: "purple" },
+      name: "10日均线",
+      yaxis: "y1",
+    };
+
+    const data1 = [trace1, trace2, trace3, trace4];
+
+    // 设置布局
     const layout = {
+      dragmode: "zoom",
+      margin: {
+        r: 10,
+        t: 40,
+        b: 40,
+        l: 60,
+      },
       title: {
-        text: `${companyName} 股价走势`,
+        text: `${companyName} (${priceChange.toFixed(
+          2
+        )} / ${priceChangePercent.toFixed(2)}%)`,
         font: {
           size: 18,
         },
-        x: 0.5,
-        xanchor: "center",
+        x: 0.05,
+        xanchor: "left",
       },
       xaxis: {
-        title: "日期",
+        autorange: true,
         type: "date",
-        rangeslider: {
-          visible: false,
-        },
+        rangeslider: { visible: false },
       },
       yaxis: {
-        title: "股价",
-        domain: [0.3, 1],
-        tickformat: ",.2f",
+        autorange: true,
+        type: "linear",
+        domain: [0, 1],
       },
-      yaxis2: {
-        title: "成交量",
-        domain: [0, 0.25],
-        tickformat: volumeTickFormat,
-        side: "right",
-        overlaying: "y",
-      },
-      margin: {
-        l: 60,
-        r: 60,
-        t: 80,
-        b: 50,
-      },
-      showlegend: true,
+      shapes: [],
+      annotations: [],
       legend: {
         orientation: "h",
+        y: 1.1,
+        yanchor: "bottom",
         x: 0.5,
-        y: -0.2,
         xanchor: "center",
       },
-      annotations: [
-        {
-          text: "数据来源: Yahoo Finance",
-          xref: "paper",
-          yref: "paper",
-          x: 1,
-          y: -0.3,
-          showarrow: false,
-          font: {
-            size: 10,
-            color: "gray",
-          },
-          xanchor: "right",
-        },
-      ],
-      height: 550,
-      plot_bgcolor: "white",
-      paper_bgcolor: "white",
-      hovermode: "closest",
     };
 
-    return {
-      data: [traceCandlestick, traceVolume],
-      layout: layout,
-    };
+    return { data: data1, layout };
+  }
+
+  /**
+   * 计算移动平均线
+   */
+  calculateMA(period, data) {
+    const result = [];
+
+    // 填充前面的空值
+    for (let i = 0; i < period - 1; i++) {
+      result.push(null);
+    }
+
+    // 计算移动平均线
+    for (let i = period - 1; i < data.length; i++) {
+      let sum = 0;
+      for (let j = 0; j < period; j++) {
+        sum += data[i - j];
+      }
+      result.push(sum / period);
+    }
+
+    return result;
   }
 
   /**
@@ -359,27 +360,33 @@ export default class StockChart {
 
     try {
       // 创建所有图表的promises
-      const promises = Object.entries(this.companies).map(async ([key, company]) => {
-        try {
-          const data = await this.getStockData(company.code, this.currentPeriod);
-          return { key, company, data };
-        } catch (error) {
-          console.error(`获取${company.name}数据失败:`, error);
-          
-          // 在错误时创建一个错误占位图表
-          this.createErrorPlaceholder(key, company, error.message);
-          
-          // 返回null表示这个公司处理完成但有错误
-          return null;
+      const promises = Object.entries(this.companies).map(
+        async ([key, company]) => {
+          try {
+            const data = await this.getStockData(
+              company.code,
+              this.currentPeriod
+            );
+            return { key, company, data };
+          } catch (error) {
+            console.error(`获取${company.name}数据失败:`, error);
+
+            // 在错误时创建一个错误占位图表
+            this.createErrorPlaceholder(key, company, error.message);
+
+            // 返回null表示这个公司处理完成但有错误
+            return null;
+          }
         }
-      });
+      );
 
       // 等待所有请求完成
       const results = await Promise.all(promises);
 
       // 创建成功获取数据的图表
-      results.forEach(result => {
-        if (result) { // 跳过null结果（那些已经创建了错误占位的）
+      results.forEach((result) => {
+        if (result) {
+          // 跳过null结果（那些已经创建了错误占位的）
           const { key, company, data } = result;
           this.createPlot(key, company, data);
         }
@@ -391,7 +398,7 @@ export default class StockChart {
         icon: "error",
         title: "更新图表失败",
         text: `无法更新图表: ${error.message}`,
-        confirmButtonText: "确定"
+        confirmButtonText: "确定",
       });
     } finally {
       // 隐藏加载动画
@@ -499,15 +506,10 @@ export default class StockChart {
     const plotConfig = this.createPlotConfig(data, company.name);
 
     // 渲染图表
-    window.Plotly.newPlot(
-      `chart-${key}`,
-      plotConfig.data,
-      plotConfig.layout,
-      {
-        responsive: true,
-        displayModeBar: "hover",
-        scrollZoom: true,
-      }
-    );
+    window.Plotly.newPlot(`chart-${key}`, plotConfig.data, plotConfig.layout, {
+      responsive: true,
+      displayModeBar: "hover",
+      scrollZoom: true,
+    });
   }
 }
