@@ -301,13 +301,14 @@ footer a:hover {
 
 /* 为错误消息添加样式 */
 .error-message {
-    text-align: center;
-    padding: 20px;
-    color: #721c24;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
+    color: #d9534f;
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
     border-radius: 4px;
-    margin: 20px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
 }
 
 /* GitHub链接按钮 */
@@ -328,4 +329,54 @@ footer a:hover {
 
 .github-link i {
     margin-right: 5px;
+}
+
+.chart-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.chart-error h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.chart-error p {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.retry-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+    background-color: #0069d9;
+}
+
+.empty-charts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+    color: #6c757d;
+    text-align: center;
+    font-size: 16px;
 } 
